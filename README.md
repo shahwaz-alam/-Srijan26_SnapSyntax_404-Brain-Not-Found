@@ -16,13 +16,11 @@ python flaskfile.py
 
 Open http://127.0.0.1:5000 in your browser.
 
-**Demo account:** demo@college.edu / demo123
-
 Deployed Link: https://statuesque-puffpuff-36c637.netlify.app/
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 campus_gig_board/
