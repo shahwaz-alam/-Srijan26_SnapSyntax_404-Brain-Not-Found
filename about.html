@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    /* ── Page variables (mirror main palette) ───────────── */
+    :root {
+      --accent-r: #f96b6b;
+      --accent-purple: #c9b8ff;
+    }
+
+    /* ── Keyframes ──────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px) rotate(-1deg); }
+      to   { opacity: 1; transform: translateY(0)   rotate(0deg);  }
+    }
+    @keyframes wiggle {
+      0%,100% { transform: rotate(-2deg); }
+      50%      { transform: rotate(2deg);  }
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg);   }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0; }
+    }
+
+    /* ── Scroll-reveal utility ──────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity .55s ease, transform .55s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── About page wrapper ─────────────────────────────── */
+    .about-page { max-width: 1060px; margin: 0 auto; padding: 0 1.5rem 5rem; }
+
+    /* ── HERO ───────────────────────────────────────────── */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: center;
+      padding: 3.5rem 0 2.5rem;
+    }
+    @media(max-width:700px){ .hero{ grid-template-columns:1fr; } }
+
+    .hero-text { animation: fadeUp .6s .1s both; }
+
+    .event-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--ink); color: var(--accent-y);
+      font-family: var(--font-title); font-size: .82rem;
+      letter-spacing: .12em;
+      padding: .35rem 1rem; border-radius: 30px;
+      box-shadow: 3px 3px 0 var(--accent-y);
+      margin-bottom: 1.2rem;
+    }
+    .event-badge span { animation: blink 1.4s infinite; }
+
+    .hero-title {
+      font-family: var(--font-title);
+      font-size: clamp(2.8rem, 6vw, 4.2rem);
+      letter-spacing: .04em;
+      line-height: 1;
+      color: var(--ink);
+      margin-bottom: .5rem;
+    }
+    .hero-title em {
+      font-style: normal;
+      color: transparent;
+      -webkit-text-stroke: 2px var(--ink);
+    }
+
+    .hero-tagline {
+      font-family: var(--font-hand);
+      font-size: 1.15rem;
+      color: var(--ink-mute);
+      margin-bottom: 1.4rem;
+      line-height: 1.55;
+    }
+
+    .hero-cta-row { display: flex; gap: .8rem; flex-wrap: wrap; }
+    .hero-cta {
+      display: inline-block; text-decoration: none;
+      font-family: var(--font-title); font-size: 1rem;
+      letter-spacing: .08em;
+      padding: .65rem 1.5rem;
+      border: 2px solid var(--ink); border-radius: var(--radius);
+      box-shadow: 4px 4px 0 var(--ink);
+      transition: transform .12s, box-shadow .12s;
+    }
+    .hero-cta:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--ink); }
+    .hero-cta.primary   { background: var(--ink); color: var(--accent-y); }
+    .hero-cta.secondary { background: var(--accent-g); color: var(--ink); }
+
+    /* Hero illustration — scrapbook collage */
+    .hero-art {
+      position: relative;
+      height: 300px;
+      animation: fadeUp .6s .25s both;
+    }
+    .art-card {
+      position: absolute;
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: 6px;
+      padding: .8rem 1rem;
+      box-shadow: var(--shadow-md);
+      font-family: var(--font-mono);
+      font-size: .78rem;
+    }
+    .art-card.c1 { top: 10px; left: 20px; width: 160px; transform: rotate(-3deg); background: var(--accent-y); }
+    .art-card.c2 { top: 50px; right: 10px; width: 175px; transform: rotate(2.5deg); background: var(--accent-p); }
+    .art-card.c3 { bottom: 30px; left: 50px; width: 155px; transform: rotate(1.5deg); background: var(--accent-b); }
+    .art-card.c4 { bottom: 10px; right: 30px; width: 130px; transform: rotate(-2deg); background: var(--accent-g); }
+    .art-card-title { font-weight: 700; font-size: .85rem; margin-bottom: .3rem; }
+    .art-bounty { font-family: var(--font-title); font-size: 1.4rem; }
+    .art-status {
+      display: inline-block;
+      font-family: var(--font-title); font-size: .62rem;
+      letter-spacing: .1em; padding: .12rem .5rem;
+      border: 2px solid var(--ink); border-radius: 3px;
+      box-shadow: 1px 1px 0 var(--ink);
+      margin-top: .3rem;
+    }
+    /* Spinning star decoration */
+    .star-spin {
+      position: absolute; top: 0; right: 50%;
+      font-size: 1.8rem;
+      animation: spin 8s linear infinite;
+      opacity: .5;
+    }
+
+    /* ── SECTION TITLES ─────────────────────────────────── */
+    .section-label {
+      display: inline-block;
+      font-family: var(--font-title);
+      font-size: .85rem; letter-spacing: .14em;
+      padding: .22rem .75rem;
+      border: 2px solid var(--ink); border-radius: 4px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: .6rem;
+      transform: rotate(-1deg);
+    }
+    .section-title {
+      font-family: var(--font-title);
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      letter-spacing: .04em;
+      line-height: 1.1;
+      margin-bottom: 1.4rem;
+    }
+
+    /* ── DIVIDER ────────────────────────────────────────── */
+    .tape-divider {
+      width: 100%; height: 28px;
+      background: var(--accent-y);
+      border-top: 2px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+      position: relative; overflow: hidden;
+      margin: 3rem 0;
+    }
+    .tape-divider::before {
+      content: 'CAMPUS GIG BOARD  ✦  WEBFUSION 2026  ✦  STUDENT PROJECT  ✦  CAMPUS GIG BOARD  ✦  WEBFUSION 2026  ✦  STUDENT PROJECT  ✦  CAMPUS GIG BOARD  ✦  ';
+      position: absolute; white-space: nowrap;
+      font-family: var(--font-title); font-size: .75rem;
+      letter-spacing: .12em; color: var(--ink);
+      top: 50%; transform: translateY(-50%);
+      animation: marquee 18s linear infinite;
+    }
+    @keyframes marquee {
+      from { transform: translateX(0)    translateY(-50%); }
+      to   { transform: translateX(-50%) translateY(-50%); }
+    }
+
+    /* ── WHAT / WHY grid ────────────────────────────────── */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+    .why-card {
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 1.3rem 1.2rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .why-card:hover { transform: translate(-3px,-3px); box-shadow: var(--shadow-lg); }
+    .why-card:nth-child(2) { transform: rotate(.5deg); }
+    .why-card:nth-child(3) { transform: rotate(-.4deg); }
+    .why-card:nth-child(4) { transform: rotate(.3deg); }
+    .why-card:hover { transform: translate(-3px,-3px) rotate(0) !important; }
+    .why-icon {
+      font-size: 2rem; display: block;
+      margin-bottom: .7rem;
+    }
+    .why-title {
+      font-family: var(--font-mono); font-size: .92rem;
+      font-weight: 700; margin-bottom: .4rem;
+    }
+    .why-body {
+      font-size: .84rem; color: var(--ink-mute);
+      line-height: 1.6;
+    }
+    .why-color-strip {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 6px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    /* ── HOW IT WORKS timeline ──────────────────────────── */
+    .how-wrap {
+      display: flex; gap: 0;
+      position: relative;
+      overflow-x: auto;
+      padding-bottom: .5rem;
+    }
+    .how-step {
+      flex: 1; min-width: 160px;
+      position: relative;
+      text-align: center;
+      padding: 0 .5rem;
+    }
+    .how-step:not(:last-child)::after {
+      content: '→';
+      position: absolute; right: -14px; top: 28px;
+      font-size: 1.4rem; color: var(--ink);
+      font-weight: 700;
+    }
+    .how-circle {
+      width: 58px; height: 58px;
+      border-radius: 50%;
+      border: 3px solid var(--ink);
+      box-shadow: 4px 4px 0 var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin: 0 auto 1rem;
+    }
+    .how-num {
+      font-family: var(--font-title); font-size: .7rem;
+      letter-spacing: .1em;
+      background: var(--ink); color: var(--accent-y);
+      border-radius: 20px; padding: .12rem .5rem;
+      margin-bottom: .5rem; display: inline-block;
+    }
+    .how-title {
+      font-family: var(--font-mono); font-size: .83rem;
+      font-weight: 700; margin-bottom: .3rem;
+    }
+    .how-body {
+      font-size: .78rem; color: var(--ink-mute); line-height: 1.5;
+    }
+
+    /* ── TECH STACK ─────────────────────────────────────── */
+    .tech-grid {
+      display: flex; flex-wrap: wrap; gap: .7rem;
+      margin-top: .5rem;
+    }
+    .tech-tag {
+      display: flex; align-items: center; gap: .45rem;
+      font-family: var(--font-mono); font-size: .78rem; font-weight: 700;
+      padding: .45rem .9rem;
+      border: 2px solid var(--ink); border-radius: 4px;
+      box-shadow: 3px 3px 0 var(--ink);
+      transition: transform .12s;
+    }
+    .tech-tag:hover { transform: translate(-2px,-2px); }
+
+    /* ── TEAM SECTION ───────────────────────────────────── */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: .5rem;
+    }
+    @media(max-width:640px){ .team-grid{ grid-template-columns:1fr; } }
+
+    .team-card {
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 1.6rem 1.2rem 1.3rem;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform .15s, box-shadow .15s;
+    }
+    .team-card:hover { transform: translateY(-5px) rotate(-.5deg); box-shadow: var(--shadow-lg); }
+    .team-card:nth-child(1) { transform: rotate(-1.2deg); }
+    .team-card:nth-child(2) { transform: rotate(.8deg); }
+    .team-card:nth-child(3) { transform: rotate(-0.5deg); }
+    .team-card:nth-child(1):hover,
+    .team-card:nth-child(2):hover,
+    .team-card:nth-child(3):hover { transform: translateY(-5px) rotate(0); }
+
+    .team-color-bar {
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 8px;
+    }
+    .team-avatar {
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      border: 3px solid var(--ink);
+      box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin: .8rem auto .9rem;
+    }
+    .team-name {
+      font-family: var(--font-title);
+      font-size: 1.25rem; letter-spacing: .04em;
+      margin-bottom: .15rem;
+    }
+    .team-role {
+      font-family: var(--font-mono); font-size: .7rem;
+      color: var(--ink-mute); letter-spacing: .06em;
+      text-transform: uppercase; margin-bottom: .7rem;
+    }
+    .team-skill-row { display: flex; flex-wrap: wrap; justify-content: center; gap: .35rem; }
+    .team-skill {
+      font-family: var(--font-mono); font-size: .62rem;
+      padding: .18rem .5rem;
+      border: 1.5px solid var(--ink); border-radius: 3px;
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+    .team-year-badge {
+      position: absolute; bottom: 12px; right: 12px;
+      background: var(--ink); color: var(--accent-y);
+      font-family: var(--font-title); font-size: .62rem;
+      letter-spacing: .08em; padding: .15rem .5rem;
+      border-radius: 3px;
+    }
+
+    /* ── WEBFUSION BANNER ───────────────────────────────── */
+    .event-banner {
+      background: var(--ink);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 2rem 2rem;
+      box-shadow: var(--shadow-lg);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center; gap: 2rem;
+      position: relative; overflow: hidden;
+    }
+    @media(max-width:600px){ .event-banner{ grid-template-columns:1fr; } }
+    .event-banner::before {
+      content: '';
+      position: absolute; top: 0; right: 0;
+      width: 200px; height: 200px;
+      background: var(--accent-y);
+      opacity: .06;
+      border-radius: 50%;
+      transform: translate(60px,-60px);
+    }
+    .event-name {
+      font-family: var(--font-title);
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: var(--accent-y);
+      letter-spacing: .06em;
+      line-height: 1;
+      margin-bottom: .4rem;
+    }
+    .event-sub {
+      font-family: var(--font-mono); font-size: .8rem;
+      color: #aaa; line-height: 1.6;
+    }
+    .event-sticker {
+      background: var(--accent-y);
+      color: var(--ink);
+      font-family: var(--font-hand);
+      font-size: 1rem;
+      padding: 1rem 1.2rem;
+      border: 2px solid var(--accent-y);
+      border-radius: 6px;
+      box-shadow: 4px 4px 0 rgba(255,255,255,.2);
+      transform: rotate(3deg);
+      text-align: center;
+      line-height: 1.4;
+      white-space: nowrap;
+    }
+
+    /* ── STATS ROW ──────────────────────────────────────── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin: 2.5rem 0;
+    }
+    @media(max-width:600px){ .stats-row{ grid-template-columns:1fr 1fr; } }
+    .stat-box {
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 1.1rem .8rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-box:nth-child(1) { background: var(--accent-y); transform: rotate(-.5deg); }
+    .stat-box:nth-child(2) { background: var(--accent-g); transform: rotate(.4deg);  }
+    .stat-box:nth-child(3) { background: var(--accent-b); transform: rotate(-.3deg); }
+    .stat-box:nth-child(4) { background: var(--accent-p); transform: rotate(.6deg);  }
+    .stat-num {
+      font-family: var(--font-title); font-size: 2.4rem;
+      letter-spacing: .02em; display: block; line-height: 1;
+    }
+    .stat-lbl {
+      font-family: var(--font-mono); font-size: .68rem;
+      color: var(--ink); letter-spacing: .06em;
+      text-transform: uppercase; margin-top: .3rem;
+    }
+
+    /* ── VALUES / PRINCIPLES ────────────────────────────── */
+    .values-list { list-style: none; padding: 0; margin: 0; }
+    .values-list li {
+      display: flex; align-items: flex-start; gap: .9rem;
+      padding: .9rem 0;
+      border-bottom: 1.5px dashed #ccc;
+      font-size: .9rem; color: var(--ink-mute);
+      line-height: 1.6;
+    }
+    .values-list li:last-child { border-bottom: none; }
+    .values-list li strong { color: var(--ink); font-family: var(--font-mono); font-size: .85rem; }
+    .val-icon {
+      flex-shrink: 0;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+
+    /* ── FOOTER STRIP ───────────────────────────────────── */
+    .about-footer {
+      margin-top: 4rem;
+      background: var(--ink);
+      border-radius: var(--radius);
+      padding: 1.6rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .about-footer-logo {
+      font-family: var(--font-title); font-size: 1.4rem;
+      color: var(--accent-y); letter-spacing: .06em;
+    }
+    .about-footer-links { display: flex; gap: .6rem; flex-wrap: wrap; }
+    .footer-pill {
+      font-family: var(--font-mono); font-size: .7rem;
+      color: #ccc; padding: .3rem .8rem;
+      border: 1.5px solid #555; border-radius: 20px;
+      text-decoration: none;
+      transition: border-color .15s, color .15s;
+    }
+    .footer-pill:hover { color: var(--accent-y); border-color: var(--accent-y); }
+    .footer-copy {
+      font-family: var(--font-mono); font-size: .68rem;
+      color: #666; width: 100%; text-align: center;
+      padding-top: .8rem; border-top: 1px solid #333; margin-top: .5rem;
+    }
+
+    /* ── Two-col layout helper ──────────────────────────── */
+    .two-col-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media(max-width:700px){ .two-col-section{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════ HEADER ══════════════════ -->
+  <header class="header">
+    <div class="header-clip"></div>
+    <div class="header-inner">
+      <div class="header-avatar"><div class="avatar-placeholder">🎓</div></div>
+      <div class="header-text">
+        <h1 class="site-title">Campus Gig Board</h1>
+        <p class="site-tagline">Quick tasks. Real bounties. Student-to-student.</p>
+      </div>
+      <div class="header-note">
+        <span class="sticky-note yellow">About Us ✏️</span>
+      </div>
+      <nav style="margin-left:auto; display:flex; gap:.6rem; align-items:center; position:relative; z-index:1;">
+        <a href="/dashboard" class="filter-btn" style="text-decoration:none">🏠 Dashboard</a>
+        <a href="/profile"   class="filter-btn" style="text-decoration:none">👤 Profile</a>
+        <a href="/logout"    class="filter-btn" style="text-decoration:none">🚪 Logout</a>
+      </nav>
+    </div>
+    <div class="header-meta">
+      <span class="tag-pill">🏫 Student-built</span>
+      <span class="tag-pill">⚡ WebFusion 2026</span>
+      <span class="tag-pill">💡 Open Source</span>
+    </div>
+  </header>
+
+  <div class="about-page">
+
+    <!-- ══════════════════ HERO ══════════════════ -->
+    <section class="hero">
+      <div class="hero-text">
+        <div class="event-badge">
+          <span>●</span> WEBFUSION PRELIMS 2026
+        </div>
+        <h1 class="hero-title">
+          We Built a<br/><em>Gig Board</em><br/>for Students.
+        </h1>
+        <p class="hero-tagline">
+          Because posting "anyone free to debug my code for ₹200?" in a WhatsApp group just doesn't cut it anymore.
+        </p>
+        <div class="hero-cta-row">
+          <a href="/dashboard" class="hero-cta primary">🚀 Explore Gigs</a>
+          <a href="#team" class="hero-cta secondary">👥 Meet the Team</a>
+        </div>
+      </div>
+
+      <!-- Scrapbook collage art -->
+      <div class="hero-art">
+        <div class="star-spin">✦</div>
+
+        <div class="art-card c1">
+          <div class="art-card-title">Design Fest Poster</div>
+          <div class="art-bounty">₹300</div>
+          <div><span class="art-status" style="background:var(--accent-g);">🟢 OPEN</span></div>
+        </div>
+
+        <div class="art-card c2">
+          <div class="art-card-title">Debug React App</div>
+          <div class="art-bounty">₹500</div>
+          <div><span class="art-status" style="background:var(--accent-y);">🟡 IN PROGRESS</span></div>
+        </div>
+
+        <div class="art-card c3">
+          <div class="art-card-title">Write Blog Post</div>
+          <div class="art-bounty">₹200</div>
+          <div><span class="art-status" style="background:var(--accent-b);">🔵 APPLIED</span></div>
+        </div>
+
+        <div class="art-card c4">
+          <div class="art-card-title">PPT Template</div>
+          <div class="art-bounty">₹250</div>
+          <div><span class="art-status" style="background:var(--accent-g); border-style:dashed;">✅ DONE</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ STATS ROW ══════════════════ -->
+    <div class="stats-row reveal">
+      <div class="stat-box">
+        <span class="stat-num">3</span>
+        <div class="stat-lbl">Builders</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">5</span>
+        <div class="stat-lbl">Pages Built</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">4</span>
+        <div class="stat-lbl">Gig Statuses</div>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">3h</span>
+        <div class="stat-lbl">Sprint Time</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════ TAPE DIVIDER ══════════════════ -->
+    <div class="tape-divider"></div>
+
+    <!-- ══════════════════ WHAT IS THIS ══════════════════ -->
+    <section class="reveal" style="margin-bottom:3rem;">
+      <div class="section-label" style="background:var(--accent-y);">📋 What Is This?</div>
+      <h2 class="section-title">A hyper-local marketplace<br/>built for campus life.</h2>
+
+      <div class="two-col-section">
+        <div>
+          <p style="font-size:.95rem; color:var(--ink-mute); line-height:1.8; margin-bottom:1rem;">
+            <strong style="color:var(--ink);">Campus Micro-Gig Board</strong> is a student-to-student task marketplace built specifically for college campuses. Unlike Fiverr or Upwork — which are bloated, expensive, and require KYC — our platform is lightweight, local, and instant.
+          </p>
+          <p style="font-size:.95rem; color:var(--ink-mute); line-height:1.8; margin-bottom:1rem;">
+            Post a task with a small bounty (starting at ₹50), and let fellow students on your campus apply. You pick the best applicant, the work gets done, and the bounty gets paid. Simple as that.
+          </p>
+          <p style="font-size:.95rem; color:var(--ink-mute); line-height:1.8;">
+            Every gig goes through a clear <strong style="color:var(--ink);">Open → Applied → In Progress → Done</strong> lifecycle — so both parties always know where things stand.
+          </p>
+        </div>
+
+        <div>
+          <ul class="values-list">
+            <li>
+              <div class="val-icon" style="background:var(--accent-y);">🎯</div>
+              <div><strong>Campus-local only</strong><br/>Gigs are for your campus. No remote strangers — just people who understand the same deadline pressure you do.</div>
+            </li>
+            <li>
+              <div class="val-icon" style="background:var(--accent-g);">💸</div>
+              <div><strong>Zero platform fees</strong><br/>We don't take a cut. Every rupee of the bounty goes directly to the student who did the work.</div>
+            </li>
+            <li>
+              <div class="val-icon" style="background:var(--accent-b);">⚡</div>
+              <div><strong>Same-day turnaround</strong><br/>Built for quick tasks. Post a gig, get it done today. No month-long project timelines.</div>
+            </li>
+            <li>
+              <div class="val-icon" style="background:var(--accent-p);">🔒</div>
+              <div><strong>Student-verified</strong><br/>Only students with college email accounts can post or apply — keeping the community trusted and accountable.</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ WHY DOES IT EXIST ══════════════════ -->
+    <section class="reveal" style="margin-bottom:3rem;">
+      <div class="section-label" style="background:var(--accent-p);">🤔 Why Does It Exist?</div>
+      <h2 class="section-title">Because campus life has<br/>a skills gap problem.</h2>
+
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-color-strip" style="background:var(--accent-p);"></div>
+          <span class="why-icon">😩</span>
+          <div class="why-title">Platforms are overkill</div>
+          <div class="why-body">Fiverr, Upwork, Toptal — all built for professionals charging thousands. A ₹200 poster job doesn't belong there, and neither does the 30% platform fee.</div>
+        </div>
+        <div class="why-card">
+          <div class="why-color-strip" style="background:var(--accent-y);"></div>
+          <span class="why-icon">📱</span>
+          <div class="why-title">WhatsApp groups are chaos</div>
+          <div class="why-body">Messages get buried in 200-person class chats. There's no structure, no accountability, no way to track who said yes and actually delivered.</div>
+        </div>
+        <div class="why-card">
+          <div class="why-color-strip" style="background:var(--accent-b);"></div>
+          <span class="why-icon">🎨</span>
+          <div class="why-title">Skills go unused</div>
+          <div class="why-body">Every campus has students with Figma skills, Python skills, video editing chops — with zero outlet to monetise them outside of internships.</div>
+        </div>
+        <div class="why-card">
+          <div class="why-color-strip" style="background:var(--accent-g);"></div>
+          <span class="why-icon">🤝</span>
+          <div class="why-title">Peer economy is powerful</div>
+          <div class="why-body">Students get it. A classmate knows what "send by 11 PM" means. Peer-to-peer gigs build trust, community, and real-world experience simultaneously.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ HOW IT WORKS ══════════════════ -->
+    <section class="reveal" style="margin-bottom:3rem;">
+      <div class="section-label" style="background:var(--accent-b);">⚙️ How It Works</div>
+      <h2 class="section-title">Four steps. Done.</h2>
+
+      <div style="background:var(--paper); border:2px solid var(--ink); border-radius:var(--radius); padding:2rem 1.5rem; box-shadow:var(--shadow-md);">
+        <div class="how-wrap">
+          <div class="how-step">
+            <div class="how-circle" style="background:var(--accent-y);">📌</div>
+            <div class="how-num">STEP 01</div>
+            <div class="how-title">Post a Gig</div>
+            <div class="how-body">Add a title, description, category, deadline, and bounty amount. Takes 60 seconds.</div>
+          </div>
+          <div class="how-step">
+            <div class="how-circle" style="background:var(--accent-b);">🚀</div>
+            <div class="how-num">STEP 02</div>
+            <div class="how-title">Get Applications</div>
+            <div class="how-body">Students browse the feed, apply with a pitch and portfolio link. Status moves to Applied.</div>
+          </div>
+          <div class="how-step">
+            <div class="how-circle" style="background:var(--accent-p);">✅</div>
+            <div class="how-num">STEP 03</div>
+            <div class="how-title">Accept &amp; Work</div>
+            <div class="how-body">Accept the best applicant. Gig status flips to In Progress. Work begins.</div>
+          </div>
+          <div class="how-step">
+            <div class="how-circle" style="background:var(--accent-g);">💸</div>
+            <div class="how-num">STEP 04</div>
+            <div class="how-title">Mark Done &amp; Pay</div>
+            <div class="how-body">Mark the gig Completed. Pay the bounty. Both profiles get updated.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ TECH STACK ══════════════════ -->
+    <section class="reveal" style="margin-bottom:3rem;">
+      <div class="two-col-section">
+        <div>
+          <div class="section-label" style="background:var(--accent-o, #f9b87a);">🛠️ Tech Stack</div>
+          <h2 class="section-title" style="font-size:1.9rem;">Built lean.<br/>Built fast.</h2>
+          <p style="font-size:.88rem; color:var(--ink-mute); line-height:1.7; margin-bottom:1.2rem;">
+            No bloated frameworks. No paid cloud services. Just well-chosen, lightweight tools that let three second-year students ship a working product in a hackathon sprint.
+          </p>
+          <div class="tech-grid">
+            <div class="tech-tag" style="background:var(--accent-y);">🐍 Python</div>
+            <div class="tech-tag" style="background:var(--accent-b);">⚗️ Flask</div>
+            <div class="tech-tag" style="background:var(--accent-g);">🌐 HTML5</div>
+            <div class="tech-tag" style="background:var(--accent-p);">🎨 CSS3</div>
+          </div>
+        </div>
+
+        <div class="card" style="transform:rotate(.8deg);">
+          <div class="card-label green">Future Roadmap 🗺️</div>
+          <ul class="values-list" style="margin-top:.3rem;">
+            <li style="padding:.6rem 0;">
+              <div class="val-icon" style="background:var(--accent-g); font-size:.8rem; width:30px; height:30px;">1️⃣</div>
+              <div style="font-size:.83rem;"><strong>Phase 1</strong> — Integrating with the existing college portal</div>
+            </li>
+            <li style="padding:.6rem 0;">
+              <div class="val-icon" style="background:var(--accent-b); font-size:.8rem; width:30px; height:30px;">2️⃣</div>
+              <div style="font-size:.83rem;"><strong>Phase 2</strong> — Adding student authentication using college email IDs</div>
+            </li>
+            <li style="padding:.6rem 0;">
+              <div class="val-icon" style="background:var(--accent-y); font-size:.8rem; width:30px; height:30px;">3️⃣</div>
+              <div style="font-size:.83rem;"><strong>Phase 3</strong> — Implementing ratings and reviews for gig workers</div>
+            </li>
+            <li style="padding:.6rem 0;">
+              <div class="val-icon" style="background:var(--accent-p); font-size:.8rem; width:30px; height:30px;">4️⃣</div>
+              <div style="font-size:.83rem;"><strong>Phase 4</strong> — Adding secure payment integration</div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ TAPE DIVIDER ══════════════════ -->
+    <div class="tape-divider" style="background:var(--accent-p);"></div>
+
+    <!-- ══════════════════ TEAM ══════════════════ -->
+    <section id="team" class="reveal" style="margin-bottom:3rem;">
+      <div class="section-label" style="background:var(--accent-g);">👥 Who Built This?</div>
+      <h2 class="section-title">3 Students.<br/>3 Hours. One idea.</h2>
+
+      <div class="team-grid">
+
+        <!-- Mohammad Shahwaz Alam -->
+        <div class="team-card">
+          <div class="team-color-bar" style="background:var(--accent-y);"></div>
+          <div class="team-avatar" style="background:var(--accent-y);">👨‍💻</div>
+          <div class="team-name">Mohammad Shahwaz Alam</div>
+          <div class="team-role">Backend · System Design</div>
+          <div class="team-year-badge">B.Tech CSE · 2nd Year</div>
+        </div>
+
+        <!-- Suryansh Dev -->
+        <div class="team-card">
+          <div class="team-color-bar" style="background:var(--accent-b);"></div>
+          <div class="team-avatar" style="background:var(--accent-b);">🧑‍🎨</div>
+          <div class="team-name">Suryansh Dev</div>
+          <div class="team-role">Frontend · UI/UX</div>
+          <div class="team-year-badge">B.Tech CSE · 2nd Year</div>
+        </div>
+
+        <!-- Pratiksha Chakraborty -->
+        <div class="team-card">
+          <div class="team-color-bar" style="background:var(--accent-p);"></div>
+          <div class="team-avatar" style="background:var(--accent-p);">👩‍💻</div>
+          <div class="team-name">Pratiksha Chakraborty</div>
+          <div class="team-role">Full Stack · Docs</div>
+          <div class="team-year-badge">B.Tech CSE · 2nd Year</div>
+        </div>
+
+      </div>
+
+      <!-- Team note sticky -->
+      <div style="margin-top:1.5rem; display:flex; justify-content:center;">
+        <div style="background:var(--accent-y); border:2px solid var(--ink); border-radius:6px; padding:1rem 1.6rem; box-shadow:var(--shadow-md); transform:rotate(-1deg); max-width:500px; text-align:center; font-family:var(--font-hand); font-size:1rem; line-height:1.6; color:var(--ink);">
+          "As students, we often need quick help with tasks like coding, design, or presentations. Campus Gig Board creates a simple space where students can support each other, share skills, and earn from small gigs within the campus." 🙌
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ WEBFUSION BANNER ══════════════════ -->
+    <section class="reveal" style="margin-bottom:3rem;">
+      <div class="event-banner">
+        <div>
+          <div class="event-name">WebFusion 2026</div>
+          <div style="font-family:var(--font-title); font-size:1.1rem; color:var(--accent-g); letter-spacing:.06em; margin-bottom:.6rem;">Prelims Round — Web Development Challenge</div>
+          <div class="event-sub">
+            Campus Micro-Gig Board was built as our submission for the WebFusion Prelims Round — a web development competition that challenged teams to build real-world, user-centric applications from scratch.<br/><br/>
+            The brief: solve a genuine campus problem using web technologies. We chose to tackle the student gig economy — and shipped a fully functional platform complete with user auth, gig lifecycle management, applicant tracking, and a status system, all within the competition timeline.
+          </div>
+        </div>
+        <div class="event-sticker">
+          🏆 Built for<br/><strong>WebFusion</strong><br/>Prelims 2026
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════ FOOTER ══════════════════ -->
+    <footer class="reveal" style="margin-top:3rem; border-top: 2px dashed #ccc; padding-top: 1.5rem; text-align:center;">
+      <div style="font-family:var(--font-title); font-size:1.2rem; letter-spacing:.06em; margin-bottom:.6rem;">🎓 Campus Gig Board</div>
+      <div style="display:flex; justify-content:center; gap:.6rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <a href="/dashboard" class="filter-btn" style="text-decoration:none;">🏠 Dashboard</a>
+        <a href="/register"  class="filter-btn" style="text-decoration:none;">✨ Join Now</a>
+        <a href="/login"     class="filter-btn" style="text-decoration:none;">🔑 Login</a>
+        <a href="/profile"   class="filter-btn" style="text-decoration:none;">👤 Profile</a>
+      </div>
+      <p style="font-family:var(--font-mono); font-size:.72rem; color:var(--ink-mute);">
+        Built with ❤️ by Mohammad Shahwaz Alam, Suryansh Dev &amp; Pratiksha Chakraborty · B.Tech CSE 2nd Year · WebFusion Prelims 2026
+      </p>
+    </footer>
+
+  </div><!-- /about-page -->
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(el => {
+        if (el.isIntersecting) {
+          el.target.classList.add('visible');
+          observer.unobserve(el.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+    // Stagger team cards
+    document.querySelectorAll('.team-card').forEach((card, i) => {
+      card.style.transitionDelay = `${i * 0.1}s`;
+    });
+
+    // Toast for flash messages
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}{% for msg in messages %}showToast("{{ msg }}");{% endfor %}{% endif %}
+    {% endwith %}
+  </script>
+
+</body>
+</html>

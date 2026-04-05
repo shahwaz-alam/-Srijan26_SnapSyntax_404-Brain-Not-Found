@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apply — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    .apply-wrap {
+      max-width: 700px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+    .back-link {
+      font-family: var(--font-mono);
+      font-size: .75rem;
+      color: var(--ink);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid transparent;
+      transition: border-color .15s;
+    }
+    .back-link:hover { border-color: var(--ink); }
+    .gig-preview {
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      margin-bottom: 1.6rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      transform: rotate(-.4deg);
+    }
+    .gig-preview .corner-tear {
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 28px; height: 28px;
+      background: var(--bg);
+      clip-path: polygon(100% 0, 100% 100%, 0 100%);
+      border-top: 1.5px solid var(--ink-mute);
+      border-left: 1.5px solid var(--ink-mute);
+    }
+    .preview-bounty-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .8rem;
+    }
+    .preview-desc {
+      font-size: .88rem;
+      color: var(--ink-mute);
+      line-height: 1.6;
+      margin-top: .5rem;
+    }
+    .deadline-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: .7rem;
+      background: var(--accent-b);
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+      padding: .2rem .6rem;
+      margin-top: .6rem;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-clip"></div>
+    <div class="header-inner">
+      <div class="header-avatar"><div class="avatar-placeholder">🎓</div></div>
+      <div class="header-text">
+        <h1 class="site-title">Campus Gig Board</h1>
+        <p class="site-tagline">Quick tasks. Real bounties. Student-to-student.</p>
+      </div>
+      <nav style="margin-left:auto; display:flex; gap:.6rem; align-items:center; position:relative; z-index:1;">
+        <a href="/dashboard" class="filter-btn" style="text-decoration:none">🏠 Dashboard</a>
+        <a href="/profile" class="filter-btn" style="text-decoration:none">👤 Profile</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="apply-wrap">
+    <a href="/dashboard" class="back-link">← Back to Board</a>
+
+    <!-- Gig preview card -->
+    <div class="gig-preview">
+      <div class="card-label yellow" style="margin-bottom:.8rem">Gig Details</div>
+      <div class="preview-bounty-row">
+        <h2 class="gig-title" style="font-size:1.1rem">{{ gig.title if gig else 'Design a Hackathon Poster' }}</h2>
+        <span class="bounty">₹{{ gig.bounty if gig else '300' }}</span>
+      </div>
+      <span class="cat-badge {{ (gig.category | lower | replace(' / ','') | replace(' ','')) if gig else 'design' }}">
+        {{ gig.category if gig else 'Design' }}
+      </span>
+      <p class="preview-desc">{{ gig.description if gig else 'Need a vibrant A3 poster for our college hackathon. Must deliver editable file.' }}</p>
+      <div class="deadline-badge">📅 Deadline: {{ gig.deadline if gig else 'Mar 18' }}</div>
+      <div class="corner-tear"></div>
+    </div>
+
+    <!-- Apply form -->
+    <section class="card" style="position:relative;">
+      <div class="card-label pink">Your Application</div>
+      <form method="POST" action="/apply/{{ gig.id if gig else 1 }}">
+        <div class="form-row">
+          <label>Why are you the right fit?</label>
+          <textarea name="pitch" rows="4" placeholder="Briefly describe your skills and why you'd do this well..." required></textarea>
+        </div>
+        <div class="form-row">
+          <label>Portfolio / Work Sample Link (optional)</label>
+          <input type="url" name="portfolio" placeholder="https://behance.net/yourprofile"/>
+        </div>
+        <div class="form-row">
+          <label>Your Proposed Timeline</label>
+          <input type="text" name="timeline" placeholder="e.g. I can deliver in 6 hours" required/>
+        </div>
+        <button type="submit" class="btn-primary">🚀 Submit Application</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</body>
+</html>

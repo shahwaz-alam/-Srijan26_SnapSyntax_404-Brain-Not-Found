@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Applicants — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    .page-wrap { max-width: 860px; margin: 2.5rem auto 5rem; padding: 0 1.5rem; }
+    .page-title { font-family: var(--font-title); font-size: 2.2rem; letter-spacing: .04em; margin-bottom: .2rem; }
+    .page-sub   { font-family: var(--font-mono); font-size: .75rem; color: var(--ink-mute); margin-bottom: 1.8rem; }
+
+    .gig-banner {
+      background: var(--ink); color: #fff;
+      border-radius: var(--radius); padding: 1.1rem 1.4rem;
+      margin-bottom: 1.8rem; display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+      box-shadow: var(--shadow-md);
+    }
+    .gig-banner-title { font-family: var(--font-title); font-size: 1.4rem; letter-spacing: .04em; color: var(--accent-y); }
+    .gig-banner-meta  { font-family: var(--font-mono); font-size: .72rem; color: #aaa; margin-top: .2rem; }
+
+    .app-card {
+      background: var(--paper); border: 2px solid var(--ink);
+      border-radius: var(--radius); padding: 1.3rem 1.4rem;
+      margin-bottom: 1.1rem; box-shadow: var(--shadow-md);
+      position: relative; overflow: hidden;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .app-card:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow-lg); }
+    .app-card.accepted { border-left: 6px solid #3a9a3a; }
+    .app-card.rejected { opacity: .5; }
+
+    .app-card-top {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: .6rem; margin-bottom: .8rem;
+    }
+    .app-username { font-family: var(--font-title); font-size: 1.2rem; letter-spacing: .04em; }
+    .app-time     { font-family: var(--font-mono); font-size: .68rem; color: var(--ink-mute); }
+
+    .sbadge {
+      font-family: var(--font-title); font-size: .68rem; letter-spacing: .08em;
+      padding: .2rem .7rem; border: 2px solid var(--ink); border-radius: 3px;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+    .sbadge.applied  { background: var(--accent-b); }
+    .sbadge.accepted { background: var(--accent-g); }
+    .sbadge.rejected { background: #eee; }
+
+    .app-pitch {
+      font-size: .88rem; color: var(--ink-mute); line-height: 1.65;
+      border-left: 3px solid var(--accent-y); padding-left: .8rem;
+      margin-bottom: .8rem;
+    }
+    .app-meta-row {
+      display: flex; gap: 1.2rem; flex-wrap: wrap;
+      font-family: var(--font-mono); font-size: .72rem; color: var(--ink-mute);
+      margin-bottom: .9rem;
+    }
+    .app-meta-row a { color: var(--ink); }
+
+    .accepted-banner {
+      background: var(--accent-g); border: 2px solid var(--ink); border-radius: 4px;
+      padding: .5rem 1rem; font-family: var(--font-hand); font-size: .95rem;
+      color: var(--ink); display: inline-block;
+    }
+    .empty-state {
+      text-align: center; padding: 3rem; font-family: var(--font-mono);
+      font-size: .85rem; color: var(--ink-mute);
+      border: 2px dashed #ccc; border-radius: var(--radius); background: var(--paper);
+    }
+    .count-badge {
+      background: var(--ink); color: var(--accent-y);
+      font-family: var(--font-title); font-size: .75rem;
+      letter-spacing: .06em; padding: .15rem .6rem; border-radius: 20px;
+      margin-left: .5rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-clip"></div>
+    <div class="header-inner">
+      <div class="header-avatar"><div class="avatar-placeholder">🎓</div></div>
+      <div class="header-text">
+        <h1 class="site-title">Campus Gig Board</h1>
+        <p class="site-tagline">Quick tasks. Real bounties. Student-to-student.</p>
+      </div>
+      <nav style="margin-left:auto;display:flex;gap:.6rem;align-items:center;position:relative;z-index:1;">
+        <a href="/dashboard" class="filter-btn" style="text-decoration:none">🏠 Dashboard</a>
+        <a href="/my-gigs"   class="filter-btn" style="text-decoration:none">📌 My Gigs</a>
+        <a href="/notifications" class="filter-btn" style="text-decoration:none">
+          🔔 {% if current_user.unread_count %}<span style="background:var(--accent-r);color:#fff;border-radius:10px;padding:0 5px;font-size:.65rem;">{{ current_user.unread_count }}</span>{% endif %}
+        </a>
+        <a href="/profile"   class="filter-btn" style="text-decoration:none">👤 Profile</a>
+        <a href="/logout"    class="filter-btn" style="text-decoration:none">🚪 Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-wrap">
+    <a href="/gig/{{ gig.id }}" style="font-family:var(--font-mono);font-size:.75rem;color:var(--ink);text-decoration:none;display:inline-block;margin-bottom:1rem;">← Back to Gig</a>
+
+    <!-- Gig banner -->
+    <div class="gig-banner">
+      <div>
+        <div class="gig-banner-title">{{ gig.title }}</div>
+        <div class="gig-banner-meta">📅 {{ gig.deadline }} &nbsp;·&nbsp; 💰 ₹{{ gig.bounty }} &nbsp;·&nbsp; 🏷️ {{ gig.category }}</div>
+      </div>
+      <span style="background:var(--accent-y);color:var(--ink);font-family:var(--font-title);font-size:1rem;letter-spacing:.06em;padding:.4rem 1rem;border-radius:4px;border:2px solid var(--accent-y);">
+        {{ STATUS_LABELS.get(gig.status, gig.status|upper) }}
+      </span>
+    </div>
+
+    <div class="card-label green" style="margin-bottom:1rem;">
+      👥 Applicants
+      <span class="count-badge">{{ gig_apps|length }}</span>
+    </div>
+
+    {% if gig_apps %}
+      {% for app in gig_apps %}
+      <div class="app-card {{ app.status }}">
+
+        <div class="app-card-top">
+          <div>
+            <div class="app-username">👤 {{ app.username }}</div>
+            <div class="app-time">Applied {{ app.applied_at }}</div>
+          </div>
+          <span class="sbadge {{ app.status }}">{{ app.status|upper }}</span>
+        </div>
+
+        {% if app.pitch %}
+        <div class="app-pitch">{{ app.pitch }}</div>
+        {% endif %}
+
+        <div class="app-meta-row">
+          {% if app.timeline %}<span>⏱ {{ app.timeline }}</span>{% endif %}
+          {% if app.portfolio %}<span>🔗 <a href="{{ app.portfolio }}" target="_blank">Portfolio</a></span>{% endif %}
+        </div>
+
+        {% if app.status == 'accepted' %}
+          <div class="accepted-banner">✅ Accepted — working on it!</div>
+        {% elif app.status == 'rejected' %}
+          <div style="font-family:var(--font-mono);font-size:.75rem;color:#999;">❌ Not selected</div>
+        {% elif gig.status not in ['completed'] %}
+          <form method="POST" action="/gig/{{ gig.id }}/accept/{{ app.id }}">
+            <button type="submit" class="btn-apply" style="background:var(--accent-g);">
+              ✅ Accept this Applicant
+            </button>
+          </form>
+        {% endif %}
+
+      </div>
+      {% endfor %}
+
+    {% else %}
+      <div class="empty-state">
+        📭 No applicants yet.<br/>
+        Share the gig link to get more visibility!
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div id="flash-data" data-messages='{{ get_flashed_messages()|tojson }}' style="display:none;"></div>
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('flash-data');
+      if (el) JSON.parse(el.dataset.messages).forEach(m => showToast(m));
+    });
+  </script>
+</body>
+</html>

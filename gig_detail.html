@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gig Detail — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+
+    /* ── Page layout ─────────────────────────────────────── */
+    .detail-wrap {
+      max-width: 960px;
+      margin: 2.5rem auto 4rem;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 1.6rem;
+      align-items: start;
+    }
+    @media(max-width:720px){ .detail-wrap{ grid-template-columns:1fr; } }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: .4rem;
+      font-family: var(--font-mono); font-size: .75rem;
+      color: var(--ink); text-decoration: none;
+      border-bottom: 2px solid transparent;
+      transition: border-color .15s;
+      margin-bottom: 1.2rem;
+    }
+    .back-link:hover { border-color: var(--ink); }
+
+    /* ── Status stepper ──────────────────────────────────── */
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-bottom: 1.6rem;
+      flex-wrap: wrap;
+    }
+    .step {
+      display: flex; align-items: center; gap: .35rem;
+      font-family: var(--font-mono); font-size: .72rem;
+      font-weight: 700; letter-spacing: .06em;
+      padding: .45rem .9rem;
+      border: 2px solid var(--ink);
+      background: var(--bg);
+      color: var(--ink-mute);
+      position: relative;
+      white-space: nowrap;
+    }
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute; right: -12px; top: 50%;
+      transform: translateY(-50%);
+      border-top: 14px solid transparent;
+      border-bottom: 14px solid transparent;
+      border-left: 12px solid var(--ink);
+      z-index: 2;
+    }
+    .step:not(:first-child) { margin-left: 2px; }
+
+    .step.active  { background: var(--ink); color: var(--accent-y); }
+    .step.done    { background: var(--accent-g); color: var(--ink); }
+    .step.active::after  { border-left-color: var(--ink) !important; }
+    .step.done::after    { border-left-color: var(--accent-g) !important; }
+
+    /* ── Status badge (big) ──────────────────────────────── */
+    .status-big {
+      display: inline-flex; align-items: center; gap: .5rem;
+      font-family: var(--font-title); font-size: 1.1rem;
+      letter-spacing: .1em;
+      padding: .4rem 1.1rem;
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+      box-shadow: 3px 3px 0 var(--ink);
+      margin-bottom: 1rem;
+    }
+    .status-big.open        { background: var(--accent-g); }
+    .status-big.applied     { background: var(--accent-b); }
+    .status-big.in_progress { background: var(--accent-y); }
+    .status-big.completed   { background: var(--accent-g); border-style: dashed; }
+
+    /* ── Gig main card ───────────────────────────────────── */
+    .gig-main {
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 1.6rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+    .gig-main::before {
+      content: '📎';
+      position: absolute; top: -20px; left: 20px;
+      font-size: 1.8rem; transform: rotate(-12deg);
+    }
+    .gig-meta-row {
+      display: flex; align-items: center; flex-wrap: wrap;
+      gap: .6rem; margin-bottom: 1rem;
+    }
+    .gig-title-big {
+      font-family: var(--font-mono); font-size: 1.3rem;
+      font-weight: 700; line-height: 1.3;
+      margin-bottom: .6rem;
+    }
+    .gig-desc-full {
+      font-size: .9rem; color: var(--ink-mute);
+      line-height: 1.7; margin-bottom: 1.2rem;
+      border-left: 3px solid var(--accent-y);
+      padding-left: .8rem;
+    }
+    .meta-pill {
+      font-family: var(--font-mono); font-size: .7rem;
+      padding: .22rem .6rem;
+      border: 2px solid var(--ink); border-radius: 3px;
+      background: var(--bg);
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+
+    /* ── Status update form (poster) ─────────────────────── */
+    .status-controls {
+      background: var(--bg);
+      border: 2px dashed var(--ink);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      margin-top: 1.2rem;
+    }
+    .status-controls label {
+      font-family: var(--font-mono); font-size: .72rem;
+      text-transform: uppercase; letter-spacing: .08em;
+      color: var(--ink-mute); display: block;
+      margin-bottom: .5rem;
+    }
+    .status-btn-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .status-btn {
+      font-family: var(--font-title); font-size: .85rem;
+      letter-spacing: .08em;
+      padding: .45rem .9rem;
+      border: 2px solid var(--ink); border-radius: 4px;
+      cursor: pointer; box-shadow: 2px 2px 0 var(--ink);
+      transition: transform .1s, box-shadow .1s;
+      background: var(--paper);
+    }
+    .status-btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
+    .status-btn.s-open        { background: var(--accent-g); }
+    .status-btn.s-applied     { background: var(--accent-b); }
+    .status-btn.s-in_progress { background: var(--accent-y); }
+    .status-btn.s-completed   { background: var(--accent-g); }
+    .status-btn[disabled]     { opacity: .45; cursor: default; transform: none; box-shadow: 2px 2px 0 var(--ink); }
+
+    /* ── Applicants panel ────────────────────────────────── */
+    .applicants-section { margin-top: 1.6rem; }
+    .applicant-card {
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      margin-bottom: .8rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .applicant-card.accepted { border-color: #3a9a3a; box-shadow: 3px 3px 0 #3a9a3a; }
+    .applicant-card.rejected { opacity: .5; }
+    .app-header {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: .5rem; margin-bottom: .5rem;
+    }
+    .app-username {
+      font-family: var(--font-mono); font-size: .88rem; font-weight: 700;
+    }
+    .app-status-badge {
+      font-family: var(--font-title); font-size: .72rem;
+      letter-spacing: .08em; padding: .18rem .6rem;
+      border: 2px solid var(--ink); border-radius: 3px;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+    .app-status-badge.applied   { background: var(--accent-b); }
+    .app-status-badge.accepted  { background: var(--accent-g); }
+    .app-status-badge.rejected  { background: #ddd; }
+    .app-pitch {
+      font-size: .83rem; color: var(--ink-mute);
+      line-height: 1.55; margin-bottom: .6rem;
+    }
+    .app-meta {
+      font-family: var(--font-mono); font-size: .68rem;
+      color: var(--ink-mute); margin-bottom: .6rem;
+    }
+    .app-meta a { color: var(--ink); }
+
+    /* ── Right sidebar ───────────────────────────────────── */
+    .sidebar-card {
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 1.3rem 1.1rem;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 1.2rem;
+    }
+    .bounty-display {
+      font-family: var(--font-title); font-size: 3rem;
+      background: var(--accent-y); color: var(--ink);
+      text-align: center; padding: .6rem;
+      border: 2px solid var(--ink); border-radius: 4px;
+      box-shadow: 4px 4px 0 var(--ink);
+      margin-bottom: 1rem; letter-spacing: .04em;
+    }
+    .sidebar-row {
+      display: flex; justify-content: space-between;
+      font-size: .85rem; padding: .45rem 0;
+      border-bottom: 1.5px dashed #ddd;
+    }
+    .sidebar-row:last-child { border-bottom: none; }
+    .sidebar-row span { color: var(--ink-mute); font-family: var(--font-mono); font-size: .72rem; }
+    .sidebar-row strong { font-family: var(--font-mono); font-size: .8rem; }
+
+    /* ── My application status box ───────────────────────── */
+    .my-app-box {
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 1rem; margin-top: .5rem;
+      text-align: center;
+    }
+    .my-app-box.applied     { background: var(--accent-b); }
+    .my-app-box.accepted    { background: var(--accent-g); }
+    .my-app-box.rejected    { background: #f0f0f0; }
+    .my-app-title {
+      font-family: var(--font-title); font-size: 1.1rem;
+      letter-spacing: .06em; margin-bottom: .3rem;
+    }
+    .my-app-sub {
+      font-family: var(--font-mono); font-size: .72rem;
+      color: var(--ink-mute);
+    }
+
+    /* ── Empty state ─────────────────────────────────────── */
+    .empty-apps {
+      font-family: var(--font-mono); font-size: .8rem;
+      color: var(--ink-mute); text-align: center;
+      padding: 1.5rem; border: 2px dashed #ccc;
+      border-radius: var(--radius);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-clip"></div>
+    <div class="header-inner">
+      <div class="header-avatar"><div class="avatar-placeholder">🎓</div></div>
+      <div class="header-text">
+        <h1 class="site-title">Campus Gig Board</h1>
+        <p class="site-tagline">Quick tasks. Real bounties. Student-to-student.</p>
+      </div>
+      <nav style="margin-left:auto; display:flex; gap:.6rem; align-items:center; position:relative; z-index:1;">
+        <a href="/dashboard" class="filter-btn" style="text-decoration:none">🏠 Dashboard</a>
+        <a href="/profile"   class="filter-btn" style="text-decoration:none">👤 Profile</a>
+        <a href="/logout"    class="filter-btn" style="text-decoration:none">🚪 Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="detail-wrap">
+    <!-- ═══════════════ LEFT COLUMN ═══════════════ -->
+    <div>
+      <a href="/dashboard" class="back-link">← Back to Board</a>
+
+      <!-- STATUS STEPPER -->
+      <div class="stepper">
+        {% set statuses = [('open','🟢 OPEN'), ('applied','🔵 APPLIED'), ('in_progress','🟡 IN PROGRESS'), ('completed','✅ DONE')] %}
+        {% set order = ['open','applied','in_progress','completed'] %}
+        {% set cur_idx = order.index(gig.status) %}
+        {% for key, label in statuses %}
+          {% set idx = loop.index0 %}
+          <div class="step {% if idx == cur_idx %}active{% elif idx < cur_idx %}done{% endif %}">
+            {{ label }}
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- GIG CARD -->
+      <div class="gig-main">
+
+        <!-- Status badge -->
+        <div class="status-big {{ gig.status }}">
+          {{ STATUS_EMOJI[gig.status] }} {{ STATUS_LABELS[gig.status] }}
+        </div>
+
+        <h2 class="gig-title-big">{{ gig.title }}</h2>
+
+        <div class="gig-meta-row">
+          <span class="cat-badge {{ gig.category | lower | replace(' / ','') | replace(' ','') }}">{{ gig.category }}</span>
+          <span class="meta-pill">📅 {{ gig.deadline }}</span>
+          <span class="meta-pill">👤 Posted by {{ gig.poster.split('@')[0] }}</span>
+          <span class="meta-pill">📨 {{ gig_apps | length }} applicant(s)</span>
+        </div>
+
+        <p class="gig-desc-full">{{ gig.description }}</p>
+
+        <!-- ── POSTER: Status controls ── -->
+        {% if is_poster %}
+        <div class="status-controls">
+          <label>📊 Update Gig Status</label>
+          <div class="status-btn-row">
+            {% for s in STATUS_ORDER %}
+            <form method="POST" action="/gig/{{ gig.id }}/update-status" style="display:inline;">
+              <input type="hidden" name="status" value="{{ s }}"/>
+              <button type="submit"
+                class="status-btn s-{{ s }}"
+                {% if gig.status == s %}disabled{% endif %}>
+                {{ STATUS_EMOJI[s] }} {{ STATUS_LABELS[s] }}
+              </button>
+            </form>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- ── NON-POSTER: Apply / already applied ── -->
+        {% elif app_obj %}
+          <div class="my-app-box {{ app_obj.status }}">
+            <div class="my-app-title">
+              {% if app_obj.status == 'accepted' %}🎉 You've been accepted!
+              {% elif app_obj.status == 'rejected' %}😞 Not selected this time
+              {% else %}🔵 Application Submitted
+              {% endif %}
+            </div>
+            <div class="my-app-sub">Applied {{ app_obj.applied_at }}</div>
+          </div>
+
+        {% elif gig.status in ['open', 'applied'] %}
+          <a href="/apply/{{ gig.id }}" class="btn-primary" style="display:inline-block; width:auto; padding:.7rem 2rem; text-decoration:none; margin-top:1rem;">
+            🚀 Apply for this Gig
+          </a>
+        {% else %}
+          <div style="margin-top:1rem; font-family:var(--font-mono); font-size:.8rem; color:var(--ink-mute);">
+            ⛔ This gig is no longer accepting applications.
+          </div>
+        {% endif %}
+
+      </div><!-- /gig-main -->
+
+      <!-- ── APPLICANTS LIST (poster only) ── -->
+      {% if is_poster %}
+      <div class="applicants-section">
+        <div class="card-label green" style="margin-bottom:1rem;">
+          📨 Applicants ({{ gig_apps | length }})
+        </div>
+
+        {% if gig_apps %}
+          {% for a in gig_apps %}
+          <div class="applicant-card {{ a.status }}">
+            <div class="app-header">
+              <span class="app-username">👤 {{ a.username }}</span>
+              <span class="app-status-badge {{ a.status }}">{{ a.status | upper }}</span>
+            </div>
+
+            <p class="app-pitch">{{ a.pitch }}</p>
+
+            <div class="app-meta">
+              ⏱ Timeline: <strong>{{ a.timeline }}</strong>
+              {% if a.portfolio %}
+                &nbsp;·&nbsp; 🔗 <a href="{{ a.portfolio }}" target="_blank">Portfolio</a>
+              {% endif %}
+              &nbsp;·&nbsp; 🕒 {{ a.applied_at }}
+            </div>
+
+            {% if a.status == 'applied' and gig.status not in ['completed'] %}
+            <form method="POST" action="/gig/{{ gig.id }}/accept/{{ a.id }}" style="display:inline;">
+              <button type="submit" class="btn-apply" style="background:var(--accent-g);">
+                ✅ Accept this Applicant
+              </button>
+            </form>
+            {% endif %}
+
+          </div>
+          {% endfor %}
+
+        {% else %}
+          <div class="empty-apps">No applicants yet. Share the gig link! 🔗</div>
+        {% endif %}
+
+      </div>
+      {% endif %}
+
+    </div><!-- /left col -->
+
+    <!-- ═══════════════ RIGHT SIDEBAR ═══════════════ -->
+    <aside>
+
+      <!-- Bounty card -->
+      <div class="sidebar-card">
+        <div class="card-label yellow" style="margin-bottom:.8rem;">💰 Bounty</div>
+        <div class="bounty-display">₹{{ gig.bounty }}</div>
+        <div class="sidebar-row">
+          <span>Category</span>
+          <strong>{{ gig.category }}</strong>
+        </div>
+        <div class="sidebar-row">
+          <span>Deadline</span>
+          <strong>{{ gig.deadline }}</strong>
+        </div>
+        <div class="sidebar-row">
+          <span>Status</span>
+          <strong>{{ STATUS_LABELS[gig.status] }}</strong>
+        </div>
+        <div class="sidebar-row">
+          <span>Applicants</span>
+          <strong>{{ gig_apps | length }}</strong>
+        </div>
+      </div>
+
+      <!-- Status legend -->
+      <div class="sidebar-card">
+        <div class="card-label pink" style="margin-bottom:.8rem;">📊 Status Guide</div>
+        {% for key, label in STATUS_LABELS.items() %}
+        <div style="display:flex; align-items:center; gap:.6rem; padding:.38rem 0; border-bottom:1.5px dashed #eee; font-family:var(--font-mono); font-size:.75rem;">
+          <span>{{ STATUS_EMOJI[key] }}</span>
+          <span class="app-status-badge {{ key if key != 'in_progress' else 'applied' }}"
+                style="background:{% if key=='open' %}var(--accent-g){% elif key=='applied' %}var(--accent-b){% elif key=='in_progress' %}var(--accent-y){% else %}var(--accent-g){% endif %}">
+            {{ label }}
+          </span>
+          <span style="color:var(--ink-mute);">
+            {% if key == 'open' %}Accepting applications
+            {% elif key == 'applied' %}Has applicants
+            {% elif key == 'in_progress' %}Work underway
+            {% else %}Bounty paid out
+            {% endif %}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Quick actions -->
+      <div class="sidebar-card">
+        <div class="card-label green" style="margin-bottom:.8rem;">⚡ Quick Actions</div>
+        <a href="/dashboard" class="btn-apply" style="display:block; text-align:center; text-decoration:none; margin-bottom:.6rem; background:var(--accent-b);">🏠 Back to Board</a>
+        {% if not is_poster and gig.status in ['open','applied'] and not app_obj %}
+        <a href="/apply/{{ gig.id }}" class="btn-primary" style="display:block; text-align:center; text-decoration:none; font-size:.85rem; padding:.6rem 1rem;">🚀 Apply Now</a>
+        {% endif %}
+      </div>
+
+    </aside>
+  </div><!-- /detail-wrap -->
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}{% for msg in messages %}showToast("{{ msg }}");{% endfor %}{% endif %}
+    {% endwith %}
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notifications — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    .page-wrap { max-width: 780px; margin: 2.5rem auto 5rem; padding: 0 1.5rem; }
+    .page-title { font-family: var(--font-title); font-size: 2.4rem; letter-spacing: .04em; margin-bottom: .3rem; }
+    .page-sub   { font-family: var(--font-mono); font-size: .78rem; color: var(--ink-mute); margin-bottom: 1.8rem; }
+
+    .notif-card {
+      background: var(--paper); border: 2px solid var(--ink);
+      border-radius: var(--radius); padding: 1rem 1.2rem;
+      margin-bottom: .8rem; box-shadow: var(--shadow-sm);
+      display: flex; align-items: flex-start; gap: 1rem;
+      transition: transform .12s;
+    }
+    .notif-card:hover { transform: translate(-2px,-2px); }
+    .notif-card.unread { border-left: 5px solid var(--accent-y); background: #fffef0; }
+
+    .notif-icon {
+      font-size: 1.5rem; flex-shrink: 0;
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 2px solid var(--ink); display: flex;
+      align-items: center; justify-content: center;
+      background: var(--accent-y); box-shadow: var(--shadow-sm);
+    }
+    .notif-body { flex: 1; }
+    .notif-msg  { font-size: .9rem; line-height: 1.5; margin-bottom: .3rem; }
+    .notif-time { font-family: var(--font-mono); font-size: .68rem; color: var(--ink-mute); }
+    .notif-link {
+      display: inline-block; margin-top: .4rem;
+      font-family: var(--font-mono); font-size: .72rem;
+      color: var(--ink); text-decoration: underline;
+    }
+    .unread-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent-r); border: 2px solid var(--ink);
+      flex-shrink: 0; margin-top: .4rem;
+    }
+
+    .clear-btn {
+      font-family: var(--font-title); font-size: .85rem; letter-spacing: .06em;
+      padding: .45rem 1.2rem; border: 2px solid var(--accent-r);
+      background: var(--accent-r); color: #fff;
+      border-radius: 4px; cursor: pointer; box-shadow: var(--shadow-sm);
+      transition: transform .1s; text-decoration: none; display: inline-block;
+    }
+    .clear-btn:hover { transform: translate(-1px,-1px); }
+
+    .top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: .8rem; }
+    .empty-state {
+      text-align: center; padding: 3rem;
+      font-family: var(--font-mono); font-size: .88rem; color: var(--ink-mute);
+      border: 2px dashed #ccc; border-radius: var(--radius); background: var(--paper);
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-clip"></div>
+    <div class="header-inner">
+      <div class="header-avatar"><div class="avatar-placeholder">🎓</div></div>
+      <div class="header-text">
+        <h1 class="site-title">Campus Gig Board</h1>
+        <p class="site-tagline">Quick tasks. Real bounties. Student-to-student.</p>
+      </div>
+      <nav style="margin-left:auto;display:flex;gap:.6rem;align-items:center;position:relative;z-index:1;">
+        <a href="/dashboard"       class="filter-btn" style="text-decoration:none">🏠 Dashboard</a>
+        <a href="/my-gigs"         class="filter-btn" style="text-decoration:none">📌 My Gigs</a>
+        <a href="/my-applications" class="filter-btn" style="text-decoration:none">📨 My Apps</a>
+        <a href="/profile"         class="filter-btn" style="text-decoration:none">👤 Profile</a>
+        <a href="/logout"          class="filter-btn" style="text-decoration:none">🚪 Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-wrap">
+    <div class="top-bar">
+      <div>
+        <div class="card-label yellow" style="margin-bottom:.4rem;">🔔 Notifications</div>
+        <h1 class="page-title">Your Inbox</h1>
+        <p class="page-sub">{{ notifications|length }} notification(s) total</p>
+      </div>
+      {% if notifications %}
+      <form method="POST" action="/notifications/clear">
+        <button type="submit" class="clear-btn">🗑️ Clear All</button>
+      </form>
+      {% endif %}
+    </div>
+
+    {% if notifications %}
+      {% for notif in notifications %}
+      <div class="notif-card {% if not notif.is_read %}unread{% endif %}">
+        <div class="notif-icon">{{ notif.icon }}</div>
+        <div class="notif-body">
+          <div class="notif-msg">{{ notif.message }}</div>
+          <div class="notif-time">🕒 {{ notif.created_at }}</div>
+          {% if notif.link %}
+          <a href="{{ notif.link }}" class="notif-link">View →</a>
+          {% endif %}
+        </div>
+        {% if not notif.is_read %}
+        <div class="unread-dot" title="Unread"></div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+    {% else %}
+      <div class="empty-state">
+        🎉 You're all caught up!<br/>
+        No notifications yet. Apply to a gig or post one to get started.
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div id="flash-data" data-messages='{{ get_flashed_messages()|tojson }}' style="display:none;"></div>
+  <script>
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('flash-data');
+      if (el) JSON.parse(el.dataset.messages).forEach(m => showToast(m));
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Success — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    .success-wrap {
+      min-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      text-align: center;
+    }
+    .success-card {
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 2.8rem 2.4rem;
+      max-width: 460px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      transform: rotate(-.5deg);
+      animation: popIn .4s cubic-bezier(.17,.67,.42,1.4) both;
+    }
+    @keyframes popIn {
+      from { opacity:0; transform: scale(.85) rotate(-1deg); }
+      to   { opacity:1; transform: scale(1)  rotate(-.5deg); }
+    }
+    .success-card::before {
+      content: '📎';
+      position: absolute;
+      top: -22px; left: 22px;
+      font-size: 2rem;
+      transform: rotate(-15deg);
+    }
+    .success-emoji {
+      font-size: 4rem;
+      display: block;
+      margin-bottom: 1rem;
+      animation: bounce .6s .3s ease both;
+    }
+    @keyframes bounce {
+      0%   { transform: scale(0); }
+      60%  { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    .success-title {
+      font-family: var(--font-title);
+      font-size: 2.6rem;
+      letter-spacing: .06em;
+      color: var(--ink);
+      margin-bottom: .4rem;
+    }
+    .success-msg {
+      font-family: var(--font-mono);
+      font-size: .82rem;
+      color: var(--ink-mute);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .success-detail {
+      background: var(--bg);
+      border: 2px dashed var(--ink);
+      border-radius: 6px;
+      padding: .9rem 1.2rem;
+      font-family: var(--font-mono);
+      font-size: .8rem;
+      text-align: left;
+      margin-bottom: 1.8rem;
+      line-height: 1.8;
+    }
+    .success-detail span { color: var(--ink-mute); }
+    .success-detail strong { color: var(--ink); }
+    .btn-row {
+      display: flex;
+      gap: .8rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-secondary {
+      display: inline-block;
+      padding: .6rem 1.4rem;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-title);
+      font-size: .95rem;
+      letter-spacing: .08em;
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      text-decoration: none;
+      transition: transform .1s, box-shadow .1s;
+    }
+    .btn-secondary:hover {
+      transform: translate(-2px,-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .confetti-bar {
+      display: flex;
+      gap: .4rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .confetti-bar span {
+      display: inline-block;
+      width: 18px; height: 8px;
+      border-radius: 2px;
+      border: 1.5px solid var(--ink);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-clip"></div>
+    <div class="header-inner">
+      <div class="header-avatar"><div class="avatar-placeholder">🎓</div></div>
+      <div class="header-text">
+        <h1 class="site-title">Campus Gig Board</h1>
+        <p class="site-tagline">Quick tasks. Real bounties. Student-to-student.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="success-wrap">
+    <div class="success-card">
+      <div class="confetti-bar">
+        <span style="background:var(--accent-y)"></span>
+        <span style="background:var(--accent-g)"></span>
+        <span style="background:var(--accent-p)"></span>
+        <span style="background:var(--accent-b)"></span>
+        <span style="background:var(--accent-o)"></span>
+        <span style="background:var(--accent-r)"></span>
+        <span style="background:var(--accent-y)"></span>
+      </div>
+
+      <span class="success-emoji">{{ emoji if emoji else '🎉' }}</span>
+
+      <h1 class="success-title">{{ title if title else "You're In!" }}</h1>
+      <p class="success-msg">
+        {{ message if message else "Your application has been submitted successfully. The gig poster will review it and reach out to you soon." }}
+      </p>
+
+      {% if detail %}
+      <div class="success-detail">
+        {% for key, val in detail.items() %}
+          <div><span>{{ key }}:</span> <strong>{{ val }}</strong></div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="success-detail">
+        <div><span>Gig:</span> <strong>Design a Hackathon Poster</strong></div>
+        <div><span>Bounty:</span> <strong>₹300</strong></div>
+        <div><span>Status:</span> <strong>Application Submitted ✅</strong></div>
+      </div>
+      {% endif %}
+
+      <div class="btn-row">
+        <a href="/dashboard" class="btn-primary" style="display:inline-block; width:auto; padding:.65rem 1.6rem; text-decoration:none; font-size:.95rem;">
+          🏠 Back to Board
+        </a>
+        <a href="/profile" class="btn-secondary">👤 My Profile</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</body>
+</html>

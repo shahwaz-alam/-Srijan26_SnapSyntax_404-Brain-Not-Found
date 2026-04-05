@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Account — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    .auth-wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .auth-card {
+      background: var(--paper);
+      border: 2px solid var(--ink);
+      border-radius: var(--radius);
+      padding: 2.2rem 2rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      animation: popIn .35s cubic-bezier(.17,.67,.42,1.3) both;
+    }
+    @keyframes popIn {
+      from { opacity:0; transform: translateY(20px) rotate(-1deg); }
+      to   { opacity:1; transform: translateY(0) rotate(0); }
+    }
+    .auth-card::before {
+      content: '📎';
+      position: absolute;
+      top: -22px; left: 22px;
+      font-size: 2rem;
+      transform: rotate(-12deg);
+    }
+    /* Sticky note decoration top-right */
+    .auth-card::after {
+      content: 'FREE\ATO JOIN';
+      white-space: pre;
+      position: absolute;
+      top: -14px; right: 18px;
+      background: var(--accent-g);
+      color: var(--ink);
+      font-family: var(--font-hand);
+      font-size: .72rem;
+      line-height: 1.3;
+      padding: .3rem .6rem;
+      border: 2px solid var(--ink);
+      border-radius: 3px;
+      box-shadow: 2px 2px 0 var(--ink);
+      transform: rotate(3deg);
+    }
+    .auth-title {
+      font-family: var(--font-title);
+      font-size: 2.4rem;
+      letter-spacing: .06em;
+      margin-bottom: .2rem;
+    }
+    .auth-sub {
+      font-family: var(--font-mono);
+      font-size: .72rem;
+      color: var(--ink-mute);
+      margin-bottom: 1.6rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .auth-footer {
+      text-align: center;
+      margin-top: 1.2rem;
+      font-size: .82rem;
+      color: var(--ink-mute);
+      font-family: var(--font-mono);
+    }
+    .auth-footer a {
+      color: var(--ink);
+      font-weight: 700;
+      text-decoration: underline;
+    }
+    .logo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: var(--ink);
+      color: var(--accent-y);
+      font-family: var(--font-title);
+      font-size: 1.1rem;
+      letter-spacing: .1em;
+      padding: .4rem 1rem;
+      border-radius: 30px;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .flash-msg {
+      background: var(--accent-r);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: .78rem;
+      padding: .6rem .9rem;
+      border: 2px solid var(--ink);
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+    .divider-row {
+      display: flex;
+      align-items: center;
+      gap: .7rem;
+      margin: 1.2rem 0;
+    }
+    .divider-row hr {
+      flex: 1;
+      border: none;
+      border-top: 2px dashed #ccc;
+    }
+    .divider-row span {
+      font-family: var(--font-mono);
+      font-size: .68rem;
+      color: var(--ink-mute);
+      white-space: nowrap;
+    }
+    .strength-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: #e0e0e0;
+      margin-top: .4rem;
+      overflow: hidden;
+      border: 1.5px solid var(--ink);
+    }
+    .strength-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 3px;
+      transition: width .3s, background .3s;
+    }
+    .strength-label {
+      font-family: var(--font-mono);
+      font-size: .65rem;
+      color: var(--ink-mute);
+      margin-top: .25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="logo-pill">🎓 Campus Gig Board</div>
+
+    <div class="auth-card">
+      <h1 class="auth-title">Join the Board</h1>
+      <p class="auth-sub">Create your student account</p>
+
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          {% for msg in messages %}
+            <div class="flash-msg">⚠️ {{ msg }}</div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="/register">
+
+        <div class="form-row">
+          <label>Full Name</label>
+          <input type="text" name="username" placeholder="e.g. Aravindh A" required/>
+        </div>
+
+        <div class="form-row">
+          <label>College Email</label>
+          <input type="email" name="email" placeholder="you@college.edu" required/>
+        </div>
+
+        <div class="form-row">
+          <label>Password</label>
+          <input type="password" name="password" id="passwordInput" placeholder="Min. 6 characters" required/>
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <div class="strength-label" id="strengthLabel">Enter a password</div>
+        </div>
+
+        <div class="form-row">
+          <label>Confirm Password</label>
+          <input type="password" name="confirm_password" id="confirmInput" placeholder="Repeat your password" required/>
+        </div>
+
+        <div class="divider-row">
+          <hr/><span>Optional but helpful</span><hr/>
+        </div>
+
+        <div class="form-row">
+          <label>Your Skills (comma separated)</label>
+          <input type="text" name="skills" placeholder="e.g. Figma, React, Photoshop"/>
+        </div>
+
+        <button type="submit" class="btn-primary" style="margin-top:.6rem">🚀 Create Account</button>
+      </form>
+
+      <div class="auth-footer">
+        Already have an account? <a href="/login">Log in →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Password strength meter
+    const input  = document.getElementById('passwordInput');
+    const fill   = document.getElementById('strengthFill');
+    const label  = document.getElementById('strengthLabel');
+
+    const levels = [
+      { min: 0,  color: '#f96b6b', width: '20%', text: 'Too weak' },
+      { min: 4,  color: '#f9b87a', width: '40%', text: 'Weak' },
+      { min: 6,  color: '#f7d44c', width: '60%', text: 'Fair' },
+      { min: 8,  color: '#a8e6a3', width: '80%', text: 'Strong' },
+      { min: 10, color: '#5cb85c', width: '100%', text: 'Very strong 💪' },
+    ];
+
+    input.addEventListener('input', () => {
+      const v = input.value;
+      let score = v.length;
+      if (/[A-Z]/.test(v)) score += 1;
+      if (/[0-9]/.test(v)) score += 1;
+      if (/[^A-Za-z0-9]/.test(v)) score += 2;
+
+      const lvl = [...levels].reverse().find(l => score >= l.min) || levels[0];
+      fill.style.width      = lvl.width;
+      fill.style.background = lvl.color;
+      label.textContent     = v.length ? lvl.text : 'Enter a password';
+    });
+
+    // Client-side confirm check
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const p1 = document.getElementById('passwordInput').value;
+      const p2 = document.getElementById('confirmInput').value;
+      if (p1 !== p2) {
+        e.preventDefault();
+        const t = document.getElementById('toast');
+        t.textContent = '⚠️ Passwords do not match!';
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2800);
+      }
+    });
+  </script>
+</body>
+</html>

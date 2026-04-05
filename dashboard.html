@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-clip"></div>
+    <div class="header-inner">
+      <div class="header-avatar">
+        <div class="avatar-placeholder">🎓</div>
+      </div>
+      <div class="header-text">
+        <h1 class="site-title">Campus Gig Board</h1>
+        <p class="site-tagline">Quick tasks. Real bounties. Student-to-student.</p>
+      </div>
+      <div class="header-note">
+        <span class="sticky-note yellow">Hey, <strong>{{ current_user.username if current_user else 'Student' }}</strong> 👋</span>
+      </div>
+      <nav style="margin-left:auto; display:flex; gap:.6rem; align-items:center; position:relative; z-index:1;">
+        <a href="/about"   class="filter-btn" style="text-decoration:none">ℹ️ About</a>
+        <a href="/profile" class="filter-btn" style="text-decoration:none">👤 Profile</a>
+        <a href="/post-gig" class="filter-btn" style="text-decoration:none">📌 Post Gig</a>
+        <a href="/logout" class="filter-btn" style="text-decoration:none">🚪 Logout</a>
+      </nav>
+    </div>
+    <div class="header-meta">
+      <span class="tag-pill">🏫 College</span>
+      <span class="tag-pill">⚡ Same-Day</span>
+      <span class="tag-pill">💰 Paid</span>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- POST A GIG FORM -->
+    <section class="card form-card">
+      <div class="card-label green">Post a Task</div>
+      <form method="POST" action="/post-gig">
+        <div class="form-row">
+          <label>Task Title</label>
+          <input type="text" name="title" placeholder="e.g. Design a poster for Fest" required/>
+        </div>
+        <div class="form-row">
+          <label>Description</label>
+          <textarea name="description" placeholder="Describe what you need done..." rows="3" required></textarea>
+        </div>
+        <div class="form-row two-col">
+          <div>
+            <label>Category</label>
+            <select name="category">
+              <option>Design</option>
+              <option>Code</option>
+              <option>Writing</option>
+              <option>Video / Edit</option>
+              <option>Research</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div>
+            <label>Bounty (₹)</label>
+            <input type="number" name="bounty" placeholder="200" min="50" required/>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Deadline</label>
+          <input type="date" name="deadline" required/>
+        </div>
+        <button type="submit" class="btn-primary">📌 Post Gig</button>
+      </form>
+    </section>
+
+    <!-- GIG FEED -->
+    <section class="feed-section">
+      <div class="feed-header">
+        <h2 class="section-title">Available Gigs</h2>
+        <div class="filter-row">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="Design">Design</button>
+          <button class="filter-btn" data-filter="Code">Code</button>
+          <button class="filter-btn" data-filter="Writing">Writing</button>
+        </div>
+      </div>
+
+      <div class="gig-feed" id="gigFeed">
+        {% for gig in gigs %}
+        <article class="gig-card" data-cat="{{ gig.category }}" data-status="{{ gig.status }}">
+
+          <!-- Top: category badge + bounty -->
+          <div class="gig-top">
+            <span class="cat-badge {{ gig.category | lower | replace(' / ', '') | replace(' ', '') }}">{{ gig.category }}</span>
+            <span class="bounty">₹{{ gig.bounty }}</span>
+          </div>
+
+          <!-- Status badge row -->
+          <div style="margin-bottom:.5rem;">
+            <span class="status-chip status-{{ gig.status }}">
+              {% if gig.status == 'open' %}🟢 OPEN
+              {% elif gig.status == 'applied' %}🔵 APPLIED
+              {% elif gig.status == 'in_progress' %}🟡 IN PROGRESS
+              {% else %}✅ DONE
+              {% endif %}
+            </span>
+            {% if gig.user_applied %}
+              <span class="status-chip status-mine">📨 YOU APPLIED</span>
+            {% endif %}
+            {% if gig.is_poster %}
+              <span class="status-chip status-mine">✏️ YOUR GIG</span>
+            {% endif %}
+          </div>
+
+          <h3 class="gig-title">{{ gig.title }}</h3>
+          <p class="gig-desc">{{ gig.description }}</p>
+
+          <div class="gig-foot">
+            <span class="deadline">📅 {{ gig.deadline }} · 👥 {{ gig.applicant_count }}</span>
+            <a href="/gig/{{ gig.id }}" class="btn-apply
+              {% if gig.status == 'completed' %}applied
+              {% elif gig.user_applied %}applied
+              {% endif %}">
+              {% if gig.is_poster %}Manage Gig
+              {% elif gig.user_applied %}View Status
+              {% elif gig.status in ['open', 'applied'] %}Apply for Gig
+              {% else %}View Details
+              {% endif %}
+            </a>
+          </div>
+          <div class="corner-tear"></div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- SKILLS PANEL -->
+    <aside class="skills-panel">
+      <div class="card-label pink">Skills in Demand</div>
+      <div class="skill-cloud">
+        <span class="skill-tag s1">Figma</span>
+        <span class="skill-tag s2">React</span>
+        <span class="skill-tag s3">Photoshop</span>
+        <span class="skill-tag s4">After Effects</span>
+        <span class="skill-tag s5">Python</span>
+        <span class="skill-tag s6">Illustrator</span>
+        <span class="skill-tag s7">Video Edit</span>
+        <span class="skill-tag s8">Canva</span>
+        <span class="skill-tag s9">Premiere Pro</span>
+      </div>
+
+      <div class="card-label green" style="margin-top:2rem">Stats Today</div>
+      <div class="stat-row"><span>🎯 Gigs Posted</span><strong>{{ stats.posted if stats else 12 }}</strong></div>
+      <div class="stat-row"><span>✅ Completed</span><strong>{{ stats.completed if stats else 7 }}</strong></div>
+      <div class="stat-row"><span>💸 Bounties Paid</span><strong>₹{{ stats.paid if stats else '3,200' }}</strong></div>
+    </aside>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const f = this.dataset.filter;
+        if (!f) return;
+        document.querySelectorAll('.gig-card').forEach(card => {
+          card.style.display = (f === 'all' || card.dataset.cat === f) ? '' : 'none';
+        });
+      });
+    });
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for msg in messages %}
+          showToast("{{ msg }}");
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Posted Gigs — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    .page-wrap { max-width: 900px; margin: 2.5rem auto 5rem; padding: 0 1.5rem; }
+    .page-title { font-family: var(--font-title); font-size: 2.4rem; letter-spacing: .04em; margin-bottom: .3rem; }
+    .page-sub   { font-family: var(--font-mono); font-size: .78rem; color: var(--ink-mute); margin-bottom: 2rem; }
+
+    .gig-row {
+      background: var(--paper); border: 2px solid var(--ink);
+      border-radius: var(--radius); padding: 1.1rem 1.3rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 1rem; align-items: center;
+      transition: transform .12s, box-shadow .12s;
+      position: relative;
+    }
+    .gig-row:hover { transform: translate(-3px,-3px); box-shadow: var(--shadow-md); }
+    .gig-row .corner-tear {
+      position: absolute; bottom: 0; right: 0;
+      width: 22px; height: 22px; background: var(--bg);
+      clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    }
+    .gig-row-title { font-family: var(--font-mono); font-size: .95rem; font-weight: 700; margin-bottom: .3rem; }
+    .gig-row-meta  { font-size: .78rem; color: var(--ink-mute); display: flex; gap: .8rem; flex-wrap: wrap; }
+    .gig-row-actions { display: flex; flex-direction: column; gap: .4rem; align-items: flex-end; }
+
+    .sbadge {
+      font-family: var(--font-title); font-size: .68rem; letter-spacing: .08em;
+      padding: .2rem .7rem; border: 2px solid var(--ink); border-radius: 3px;
+      box-shadow: 2px 2px 0 var(--ink); white-space: nowrap;
+    }
+    .sbadge.open        { background: var(--accent-g); }
+    .sbadge.applied     { background: var(--accent-b); }
+    .sbadge.in_progress { background: var(--accent-y); }
+    .sbadge.completed   { background: var(--accent-g); border-style: dashed; }
+
+    .app-count-pill {
+      font-family: var(--font-mono); font-size: .68rem;
+      background: var(--ink); color: var(--accent-y);
+      border-radius: 20px; padding: .15rem .6rem;
+    }
+    .btn-sm {
+      font-family: var(--font-title); font-size: .75rem; letter-spacing: .06em;
+      padding: .35rem .8rem; border: 2px solid var(--ink); border-radius: 4px;
+      cursor: pointer; box-shadow: 2px 2px 0 var(--ink); text-decoration: none;
+      background: var(--paper); display: inline-block;
+      transition: transform .1s, box-shadow .1s;
+    }
+    .btn-sm:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
+    .btn-sm.green { background: var(--accent-g); }
+    .btn-sm.blue  { background: var(--accent-b); }
+
+    .empty-state {
+      text-align: center; padding: 3rem 1rem;
+      font-family: var(--font-mono); font-size: .85rem; color: var(--ink-mute);
+      border: 2px dashed #ccc; border-radius: var(--radius); background: var(--paper);
+    }
+    .filter-strip { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-clip"></div>
+    <div class="header-inner">
+      <div class="header-avatar"><div class="avatar-placeholder">🎓</div></div>
+      <div class="header-text">
+        <h1 class="site-title">Campus Gig Board</h1>
+        <p class="site-tagline">Quick tasks. Real bounties. Student-to-student.</p>
+      </div>
+      <nav style="margin-left:auto;display:flex;gap:.6rem;align-items:center;position:relative;z-index:1;">
+        <a href="/dashboard"       class="filter-btn" style="text-decoration:none">🏠 Dashboard</a>
+        <a href="/my-applications" class="filter-btn" style="text-decoration:none">📨 My Apps</a>
+        <a href="/notifications"   class="filter-btn" style="text-decoration:none">
+          🔔 {% if current_user.unread_count %}
+            <span style="background:var(--accent-r);color:#fff;border-radius:10px;padding:0 5px;font-size:.65rem;">{{ current_user.unread_count }}</span>
+          {% endif %}
+        </a>
+        <a href="/profile"         class="filter-btn" style="text-decoration:none">👤 Profile</a>
+        <a href="/logout"          class="filter-btn" style="text-decoration:none">🚪 Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-wrap">
+    <div class="card-label green" style="margin-bottom:.5rem;">📌 My Posted Gigs</div>
+    <h1 class="page-title">Your Gig Board</h1>
+    <p class="page-sub">All gigs you've posted — track status, view applicants, and manage them here.</p>
+
+    <!-- Filter bar -->
+    <div class="filter-strip">
+      <button class="filter-btn active" data-filter="all">All ({{ gigs|length }})</button>
+      <button class="filter-btn" data-filter="open">🟢 Open</button>
+      <button class="filter-btn" data-filter="applied">🔵 Applied</button>
+      <button class="filter-btn" data-filter="in_progress">🟡 In Progress</button>
+      <button class="filter-btn" data-filter="completed">✅ Done</button>
+    </div>
+
+    {% if gigs %}
+      <div id="gig-list">
+      {% for gig in gigs %}
+      <div class="gig-row" data-status="{{ gig.status }}">
+        <div>
+          <div class="gig-row-title">
+            <a href="/gig/{{ gig.id }}" style="text-decoration:none;color:var(--ink);">{{ gig.title }}</a>
+          </div>
+          <div class="gig-row-meta">
+            <span>📅 {{ gig.deadline }}</span>
+            <span>💰 ₹{{ gig.bounty }}</span>
+            <span class="cat-badge {{ gig.category|lower|replace(' ','') }}">{{ gig.category }}</span>
+            <span class="app-count-pill">👥 {{ gig.applicant_count }} applicant(s)</span>
+          </div>
+        </div>
+        <div class="gig-row-actions">
+          <span class="sbadge {{ gig.status }}">{{ STATUS_LABELS.get(gig.status, gig.status|upper) }}</span>
+          <a href="/gig/{{ gig.id }}/applicants" class="btn-sm blue">👥 Applicants</a>
+          <a href="/gig/{{ gig.id }}"            class="btn-sm green">🔍 Manage</a>
+        </div>
+        <div class="corner-tear"></div>
+      </div>
+      {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        📭 You haven't posted any gigs yet.<br/><br/>
+        <a href="/dashboard" style="color:var(--ink);font-weight:700;">Post your first gig →</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div id="flash-data" data-messages='{{ get_flashed_messages()|tojson }}' style="display:none;"></div>
+  <script>
+    // Filter
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const f = this.dataset.filter;
+        document.querySelectorAll('.gig-row').forEach(row => {
+          row.style.display = (f === 'all' || row.dataset.status === f) ? '' : 'none';
+        });
+      });
+    });
+    // Toast
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('flash-data');
+      if (el) JSON.parse(el.dataset.messages).forEach(m => showToast(m));
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Applications — Campus Gig Board</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Permanent+Marker&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <style>
+    .page-wrap { max-width: 900px; margin: 2.5rem auto 5rem; padding: 0 1.5rem; }
+    .page-title { font-family: var(--font-title); font-size: 2.4rem; letter-spacing: .04em; margin-bottom: .3rem; }
+    .page-sub   { font-family: var(--font-mono); font-size: .78rem; color: var(--ink-mute); margin-bottom: 2rem; }
+
+    .app-row {
+      background: var(--paper); border: 2px solid var(--ink);
+      border-radius: var(--radius); padding: 1.1rem 1.3rem;
+      margin-bottom: 1rem; box-shadow: var(--shadow-sm);
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 1rem; align-items: start;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .app-row:hover { transform: translate(-2px,-2px); box-shadow: var(--shadow-md); }
+    .app-row.accepted { border-color: #3a9a3a; box-shadow: 4px 4px 0 #3a9a3a; }
+    .app-row.rejected { opacity: .55; }
+
+    .app-gig-title { font-family: var(--font-mono); font-size: .95rem; font-weight: 700; margin-bottom: .3rem; }
+    .app-gig-meta  { font-size: .78rem; color: var(--ink-mute); display: flex; gap: .8rem; flex-wrap: wrap; margin-bottom: .5rem; }
+    .app-pitch-preview {
+      font-size: .8rem; color: var(--ink-mute); font-style: italic;
+      border-left: 3px solid var(--accent-y); padding-left: .6rem;
+      margin-top: .4rem; line-height: 1.5;
+    }
+
+    .sbadge {
+      font-family: var(--font-title); font-size: .68rem; letter-spacing: .08em;
+      padding: .2rem .7rem; border: 2px solid var(--ink); border-radius: 3px;
+      box-shadow: 2px 2px 0 var(--ink); white-space: nowrap; display: block; text-align: center;
+      margin-bottom: .3rem;
+    }
+    .sbadge.open        { background: var(--accent-g); }
+    .sbadge.applied     { background: var(--accent-b); }
+    .sbadge.in_progress { background: var(--accent-y); }
+    .sbadge.completed   { background: var(--accent-g); border-style: dashed; }
+    .sbadge.accepted    { background: var(--accent-g); }
+    .sbadge.rejected    { background: #eee; }
+
+    .summary-strip {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem;
+      margin-bottom: 1.8rem;
+    }
+    .summary-box {
+      background: var(--paper); border: 2px solid var(--ink);
+      border-radius: var(--radius); padding: .8rem 1rem; text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .summary-box:nth-child(1) { background: var(--accent-b); }
+    .summary-box:nth-child(2) { background: var(--accent-g); }
+    .summary-box:nth-child(3) { background: var(--accent-y); }
+    .summary-num { font-family: var(--font-title); font-size: 2rem; }
+    .summary-lbl { font-family: var(--font-mono); font-size: .68rem; text-transform: uppercase; }
+
+    .filter-strip { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .empty-state {
+      text-align: center; padding: 3rem; font-family: var(--font-mono);
+      font-size: .85rem; color: var(--ink-mute);
+      border: 2px dashed #ccc; border-radius: var(--radius); background: var(--paper);
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-clip"></div>
+    <div class="header-inner">
+      <div class="header-avatar"><div class="avatar-placeholder">🎓</div></div>
+      <div class="header-text">
+        <h1 class="site-title">Campus Gig Board</h1>
+        <p class="site-tagline">Quick tasks. Real bounties. Student-to-student.</p>
+      </div>
+      <nav style="margin-left:auto;display:flex;gap:.6rem;align-items:center;position:relative;z-index:1;">
+        <a href="/dashboard"  class="filter-btn" style="text-decoration:none">🏠 Dashboard</a>
+        <a href="/my-gigs"    class="filter-btn" style="text-decoration:none">📌 My Gigs</a>
+        <a href="/notifications" class="filter-btn" style="text-decoration:none">
+          🔔 {% if current_user.unread_count %}<span style="background:var(--accent-r);color:#fff;border-radius:10px;padding:0 5px;font-size:.65rem;">{{ current_user.unread_count }}</span>{% endif %}
+        </a>
+        <a href="/profile"    class="filter-btn" style="text-decoration:none">👤 Profile</a>
+        <a href="/logout"     class="filter-btn" style="text-decoration:none">🚪 Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-wrap">
+    <div class="card-label pink" style="margin-bottom:.5rem;">📨 My Applications</div>
+    <h1 class="page-title">Your Applications</h1>
+    <p class="page-sub">Track every gig you've applied to — see your status at a glance.</p>
+
+    <!-- Summary -->
+    <div class="summary-strip">
+      <div class="summary-box">
+        <div class="summary-num">{{ apps|length }}</div>
+        <div class="summary-lbl">Total Applied</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-num">{{ apps|selectattr('status','eq','accepted')|list|length }}</div>
+        <div class="summary-lbl">Accepted</div>
+      </div>
+      <div class="summary-box">
+        <div class="summary-num">{{ apps|selectattr('status','eq','applied')|list|length }}</div>
+        <div class="summary-lbl">Pending</div>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-strip">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="applied">⏳ Pending</button>
+      <button class="filter-btn" data-filter="accepted">🎉 Accepted</button>
+      <button class="filter-btn" data-filter="rejected">❌ Rejected</button>
+    </div>
+
+    {% if apps %}
+      <div id="app-list">
+      {% for app in apps %}
+      <div class="app-row {{ app.status }}" data-app-status="{{ app.status }}">
+        <div>
+          <div class="app-gig-title">
+            <a href="/gig/{{ app.gig_id }}" style="text-decoration:none;color:var(--ink);">{{ app.gig_title }}</a>
+          </div>
+          <div class="app-gig-meta">
+            <span>📅 {{ app.gig_deadline }}</span>
+            <span>💰 ₹{{ app.gig_bounty }}</span>
+            <span>🏷️ {{ app.gig_category }}</span>
+            <span>🕒 Applied {{ app.applied_at }}</span>
+          </div>
+          {% if app.pitch %}
+          <div class="app-pitch-preview">"{{ app.pitch[:120] }}{% if app.pitch|length > 120 %}...{% endif %}"</div>
+          {% endif %}
+        </div>
+        <div style="min-width:110px;">
+          <span class="sbadge {{ app.gig_status }}" style="margin-bottom:.4rem;">
+            GIG: {{ STATUS_LABELS.get(app.gig_status, app.gig_status|upper) }}
+          </span>
+          <span class="sbadge {{ app.status }}">
+            YOU: {{ app.status|upper }}
+          </span>
+          {% if app.status == 'accepted' %}
+          <div style="font-family:var(--font-hand);font-size:.75rem;color:#2a7a2a;margin-top:.4rem;text-align:center;">🎉 Congrats!</div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        📭 You haven't applied to any gigs yet.<br/><br/>
+        <a href="/dashboard" style="color:var(--ink);font-weight:700;">Browse available gigs →</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div id="flash-data" data-messages='{{ get_flashed_messages()|tojson }}' style="display:none;"></div>
+  <script>
+    document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const f = this.dataset.filter;
+        document.querySelectorAll('.app-row').forEach(row => {
+          row.style.display = (f === 'all' || row.dataset.appStatus === f) ? '' : 'none';
+        });
+      });
+    });
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2800);
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+      var el = document.getElementById('flash-data');
+      if (el) JSON.parse(el.dataset.messages).forEach(m => showToast(m));
+    });
+  </script>
+</body>
+</html>
