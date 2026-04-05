@@ -65,7 +65,7 @@ campus_gig_board/
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Backend:** Python, Flask, SQLAlchemy
 - **Frontend:** HTML5, CSS3, Jinja2
